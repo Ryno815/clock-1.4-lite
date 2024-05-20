@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0;
+            height: 200vh; /* Double the viewport height to allow scrolling */
+            background-color: #f0f0f0;
+        }
+        #top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+        }
+        #clock {
+            font-size: 8em;
+            margin: 20px;
+        }
+        #date {
+            font-size: 6em; /* Bigger font for the date */
+            margin: 20px;
+        }
+        #bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+        }
+        .switch {
+            margin: 10px;
+        }
+        select {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="top">
+        <div id="clock">00:00:00.000 AM</div>
+        <div id="date">Monday, 01 January 2000</div>
+    </div>
+    <div id="bottom">
+        <div class="switch">
+            <label>
+                <input type="checkbox" id="toggle-ms" checked>
+                Toggle Milliseconds
+            </label>
+        </div>
+        <div class="switch">
+            <label>
+                Clock and Date Color: 
+                <input type="color" id="color-picker" value="#000000">
+            </label>
+        </div>
+        <div class="switch">
+            <label>
+                Font: 
+                <select id="font-selector">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </label>
+        </div>
+    </div>
+    <script>
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        const toggleMsCheckbox = document.getElementById('toggle-ms');
+        const colorPicker = document.getElementById('color-picker');
+        const fontSelector = document.getElementById('font-selector');
+
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const hoursStr = String(hours).padStart(2, '0');
+            
+            let timeString = `${hoursStr}:${minutes}:${seconds}`;
+            if (toggleMsCheckbox.checked) {
+                timeString += `.${milliseconds}`;
+            }
+            timeString += ` ${ampm}`;
+            clockElement.textContent = timeString;
+
+            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const day = daysOfWeek[now.getDay()];
+            const date = now.toLocaleDateString();
+            dateElement.textContent = `${day}, ${date}`;
+
+            document.title = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        setInterval(updateTime, 1);
+
+        toggleMsCheckbox.addEventListener('change', updateTime);
+        colorPicker.addEventListener('input', () => {
+            clockElement.style.color = colorPicker.value;
+            dateElement.style.color = colorPicker.value;
+        });
+        fontSelector.addEventListener('change', () => {
+            clockElement.style.fontFamily = fontSelector.value;
+            dateElement.style.fontFamily = fontSelector.value;
+        });
+
+        updateTime();
+    </script>
+</body>
+</html>
