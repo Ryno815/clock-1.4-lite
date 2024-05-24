@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clock</title>
+    <title>Mystery Clock</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,42 +12,39 @@
             align-items: center;
             justify-content: flex-start;
             margin: 0;
-            height: 200vh; /* Double the viewport height to allow scrolling */
-            /* background-color: #f0f0f0; */
+            height: 200vh;
         }
-        #top {
+        #upperSection {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh; /* Full viewport height */
+            height: 100vh;
             width: 100%;
             background-image: url('/gikis.gif');
             background-size: 100% 100%; 
             background-position: center;
             background-repeat: no-repeat;
         }
-        #clock {
+        #timeDisplay {
             font-size: 8em;
             margin: 20px;
         }
-        #date {
-            font-size: 6em; /* Bigger font for the date */
+        #calendarDay {
+            font-size: 6em;
             margin: 20px;
         }
-        #bottom {
+        #lowerSection {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh; /* Full viewport height */
+            height: 100vh;
             width: 100%;
             background-color: #e0e0e0;
-            /* padding: 20px; DONT DO CAUSE MAKES BOTTOM BIGGER THAN TOP */ 
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
-            /* border-radius: 20px 20px 0 0; ROUNDS IT WEIRD */
         }
-        .option {
+       .configOption {
             margin: 15px;
             padding: 10px;
             width: 80%;
@@ -61,40 +58,40 @@
             justify-content: space-between;
             font-size: 1.2em;
         }
-        .option input[type="checkbox"],
-        .option input[type="color"],
-        .option select {
+       .configOption input[type="checkbox"],
+       .configOption input[type="color"],
+       .configOption select {
             margin-left: 10px;
             font-size: 1em;
         }
-        .option label {
+       .configOption label {
             display: flex;
             align-items: center;
         }
     </style>
 </head>
 <body>
-    <div id="top">
-        <div id="clock">00:00:00.000 AM</div>
-        <div id="date">Monday, 01 January 2000</div>
+    <div id="upperSection">
+        <div id="timeDisplay">00:00:00.000 AM</div>
+        <div id="calendarDay">Monday, 01 January 2000</div>
     </div>
-    <div id="bottom">
-        <div class="option">
+    <div id="lowerSection">
+        <div class="configOption">
             <label>
-                <span>Toggle Milliseconds</span>
-                <input type="checkbox" id="toggle-ms" checked>
+                <span>Show/Hide Milliseconds</span>
+                <input type="checkbox" id="msVisibility" checked>
             </label>
         </div>
-        <div class="option">
+        <div class="configOption">
             <label>
-                <span>Clock and Date Color:</span>
-                <input type="color" id="color-picker" value="#000000">
+                <span>Color of Time and Date:</span>
+                <input type="color" id="huePicker" value="#000000">
             </label>
         </div>
-        <div class="option">
+        <div class="configOption">
             <label>
-                <span>Font:</span>
-                <select id="font-selector">
+                <span>Typeface:</span>
+                <select id="typefaceChooser">
                     <option value="Arial">Arial</option>
                     <option value="Courier New">Courier New</option>
                     <option value="Georgia">Georgia</option>
@@ -104,10 +101,10 @@
                 </select>
             </label>
         </div>
-        <div class="option">
+        <div class="configOption">
             <label>
-                <span>Background Image:</span>
-                <select id="background-selector">
+                <span>Backdrop Picture:</span>
+                <select id="imageSelector">
                     <option value="gikis.gif">Gikis</option>
                     <option value="fall1.gif">Amazing</option>
                     <option value="fall2.gif">Amazinger</option>
@@ -116,57 +113,27 @@
         </div>
     </div>
     <script>
-        const clockElement = document.getElementById('clock');
-        const dateElement = document.getElementById('date');
-        const toggleMsCheckbox = document.getElementById('toggle-ms');
-        const colorPicker = document.getElementById('color-picker');
-        const fontSelector = document.getElementById('font-selector');
-        const backgroundSelector = document.getElementById('background-selector');
-        const topElement = document.getElementById('top');
+        const components = ['timeDisplay', 'calendarDay', 'msVisibility', 'huePicker', 'typefaceChooser', 'imageSelector', 'upperSection'].map(id => ({ id, component: document.getElementById(id) }));
 
-        function updateTime() {
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
-            const hoursStr = String(hours).padStart(2, '0');
-            
-            let timeString = `${hoursStr}:${minutes}:${seconds}`;
-            if (toggleMsCheckbox.checked) {
-                timeString += `.${milliseconds}`;
+        components.forEach(({ component }) => component && component.addEventListener('change', e => {
+            const { id } = components.find(comp => comp.component === e.target);
+            if (['huePicker', 'typefaceChooser'].includes(id)) {
+                components.filter(({ id }) => ['timeDisplay', 'calendarDay'].includes(id)).forEach(({ component }) => component.style[id === 'huePicker'? 'color' : 'fontFamily'] = e.target.value);
+            } else if (id === 'imageSelector') {
+                components.find(({ id }) => id === 'upperSection').component.style.backgroundImage = `url('/${e.target.value}')`;
             }
-            timeString += ` ${ampm}`;
-            clockElement.textContent = timeString;
-
-            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            const day = daysOfWeek[now.getDay()];
-            const date = now.toLocaleDateString();
-            dateElement.textContent = `${day}, ${date}`;
-
-            document.title = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+        }));
+        
+        function refreshClock() {
+            const currentTime = new Date(), formattedTime = `${String(currentTime.getHours() % 12 || 12).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}:${String(currentTime.getSeconds()).padStart(2, '0')}${components.find(({ id }) => id === 'msVisibility').component.checked? `.${String(currentTime.getMilliseconds()).padStart(3, '0')}` : ''} ${currentTime.getHours() >= 12? 'PM' : 'AM'}`, daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            components.find(({ id }) => id === 'timeDisplay').component.textContent = formattedTime;
+            components.find(({ id }) => id === 'calendarDay').component.textContent = `${daysOfWeek[currentTime.getDay()]}, ${currentTime.toLocaleDateString()}`;
+            document.title = formattedTime;
         }
-
-        setInterval(updateTime, 1);
-
-        toggleMsCheckbox.addEventListener('change', updateTime);
-        colorPicker.addEventListener('input', () => {
-            clockElement.style.color = colorPicker.value;
-            dateElement.style.color = colorPicker.value;
-        });
-        fontSelector.addEventListener('change', () => {
-            clockElement.style.fontFamily = fontSelector.value;
-            dateElement.style.fontFamily = fontSelector.value;
-        });
-        backgroundSelector.addEventListener('change', () => {
-            topElement.style.backgroundImage = `url('/${backgroundSelector.value}')`;
-        });
-
-        updateTime();
+        
+        setInterval(refreshClock, 1);
+        refreshClock();
+        
     </script>
 </body>
 </html>
