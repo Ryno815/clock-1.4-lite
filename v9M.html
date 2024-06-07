@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock, Timer, Wheel of Names, and Team Maker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0;
+            height: 200vh;
+        }
+        #top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            background-image: url('/gikis.gif');
+            background-size: 100% 100%; 
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        #clock, #date, #timer-display, #wheel-display, #teams-display {
+            font-size: 4em;
+            margin: 20px;
+            text-align: center;
+        }
+        #bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            background-color: #e0e0e0;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .option {
+            margin: 15px;
+            padding: 10px;
+            width: 80%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.2em;
+        }
+        .option input[type="checkbox"],
+        .option input[type="color"],
+        .option select {
+            margin-left: 10px;
+            font-size: 1em;
+        }
+        .option label {
+            display: flex;
+            align-items: center;
+        }
+        #timer-container, #wheel-container, #team-maker-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        #timer-display {
+            display: none;
+            font-size: 2em;
+        }
+        #wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 10px solid #ffffff;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+            transform-origin: 50% 50%;
+        }
+        #name-list div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 200px;
+            margin: 5px 0;
+        }
+        #winner-popup {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #winner-popup button {
+            margin: 10px;
+        }
+        .team {
+            border: 1px solid #000;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #ffffff;
+        }
+        .team span {
+            display: block;
+        }
+        .team div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #start-timer {
+            background-color: green;
+            color: white;
+            border: 2px solid green;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        #start-timer:hover {
+            background-color: white;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div id="top">
+        <div id="clock">00:00:00.000 AM</div>
+        <div id="date">Monday, 01 January 2000</div>
+        <div id="timer-display">Time left: 00:00:00.000</div>
+        <div id="wheel-display">
+            <div id="wheel"></div>
+        </div>
+        <div id="teams-display"></div>
+        <div id="winner-popup">
+            <div id="winner-name">Winner!</div>
+            <button id="done-button">Done</button>
+            <button id="remove-button">Remove</button>
+        </div>
+    </div>
+    <div id="bottom">
+        <div class="option">
+            <label>
+                <span>Mode:</span>
+                <select id="mode-selector">
+                    <option value="clock">Date and Time</option>
+                    <option value="timer">Timer</option>
+                    <option value="wheel">Wheel of Names</option>
+                    <option value="team">Random Team Maker</option>
+                </select>
+            </label>
+        </div>
+        <div id="timer-container">
+            <div class="option">
+                <label>
+                    <span>Timer Type:</span>
+                    <select id="timer-type">
+                        <option value="end-time">End Time</option>
+                        <option value="duration">Duration</option>
+                    </select>
+                </label>
+            </div>
+            <div id="end-time-container" class="option">
+                <label>
+                    <span>End Time:</span>
+                    <input type="datetime-local" id="end-time">
+                </label>
+            </div>
+            <div id="duration-container" class="option">
+                <label>
+                    <span>Hours:</span>
+                    <input type="number" id="hours" min="0">
+                </label>
+                <label>
+                    <span>Minutes:</span>
+                    <input type="number" id="minutes" min="0" max="59">
+                </label>
+                <label>
+                    <span>Seconds:</span>
+                    <input type="number" id="seconds" min="0" max="59">
+                </label>
+            </div>
+            <div class="option">
+                <button id="start-timer">Start Timer</button>
+            </div>
+        </div>
+        <div id="wheel-container">
+            <div class="option">
+                <label>
+                    <span>Add Name:</span>
+                    <input type="text" id="name-input">
+                    <button id="add-name">Add</button>
+                </label>
+            </div>
+            <div id="name-list"></div>
+        </div>
+        <div id="team-maker-container">
+            <div class="option">
+                <label>
+                    <span>Add Name:</span>
+                    <input type="text" id="team-name-input">
+                    <button id="add-team-name">Add</button>
+                </label>
+            </div>
+            <div id="team-list"></div>
+            <div class="option">
+                <label>
+                    <span>Team Size:</span>
+                    <input type="number" id="team-size" min="1" value="1">
+                </label>
+                <button id="generate-teams">Generate Teams</button>
+            </div>
+        </div>
+        <div class="option">
+            <label>
+                <span>Clock and Date Color:</span>
+                <input type="color" id="color-picker" value="#000000">
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Font:</span>
+                <select id="font-selector">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Courier">Courier</option>
+                </select>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Background Image:</span>
+                <select id="background-selector">
+                    <option value="gikis.gif">Gikis</option>
+                    <option value="fall1.gif">Amazing</option>
+                    <option value="fall2.gif">Amazinger</option>
+                </select>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Toggle Milliseconds</span>
+                <input type="checkbox" id="toggle-ms" checked>
+            </label>
+        </div>
+    </div>
+    <script>
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        const toggleMsCheckbox = document.getElementById('toggle-ms');
+        const colorPicker = document.getElementById('color-picker');
+        const fontSelector = document.getElementById('font-selector');
+        const backgroundSelector = document.getElementById('background-selector');
+        const topElement = document.getElementById('top');
+        const modeSelector = document.getElementById('mode-selector');
+        const timerTypeSelector = document.getElementById('timer-type');
+        const endTimeInput = document.getElementById('end-time');
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerContainer = document.getElementById('timer-container');
+        const endTimeContainer = document.getElementById('end-time-container');
+        const durationContainer = document.getElementById('duration-container');
+        const startTimerButton = document.getElementById('start-timer');
+        const wheelContainer = document.getElementById('wheel-container');
+        const wheelDisplay = document.getElementById('wheel-display');
+        const nameInput = document.getElementById('name-input');
+        const nameList = document.getElementById('name-list');
+        const wheelElement = document.getElementById('wheel');
+        const winnerPopup = document.getElementById('winner-popup');
+        const winnerName = document.getElementById('winner-name');
+        const doneButton = document.getElementById('done-button');
+        const removeButton = document.getElementById('remove-button');
+        const teamsDisplay = document.getElementById('teams-display');
+        const teamMakerContainer = document.getElementById('team-maker-container');
+        const teamNameInput = document.getElementById('team-name-input');
+        const teamList = document.getElementById('team-list');
+        const teamSizeInput = document.getElementById('team-size');
+
+        const names = [];
+        const teamNames = [];
+
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const hoursStr = String(hours).padStart(2, '0');
+
+            let timeString = `${hoursStr}:${minutes}:${seconds}`;
+            if (toggleMsCheckbox.checked) {
+                timeString += `.${milliseconds}`;
+            }
+            timeString += ` ${ampm}`;
+            clockElement.textContent = timeString;
+
+            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const day = daysOfWeek[now.getDay()];
+            const date = now.toLocaleDateString();
+            dateElement.textContent = `${day}, ${date}`;
+
+            document.title = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        function startTimer() {
+            const isEndTime = timerTypeSelector.value === 'end-time';
+            let endTime;
+            if (isEndTime) {
+                endTime = new Date(endTimeInput.value);
+            } else {
+                const duration = (parseInt(hoursInput.value) || 0) * 3600000 +
+                                 (parseInt(minutesInput.value) || 0) * 60000 +
+                                 (parseInt(secondsInput.value) || 0) * 1000;
+                endTime = new Date(Date.now() + duration);
+            }
+            const intervalId = setInterval(() => {
+                const now = new Date();
+                const timeLeft = endTime - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(intervalId);
+                    timerDisplay.textContent = 'Time left: 00:00:00.000';
+                    return;
+                }
+
+                const hoursLeft = String(Math.floor(timeLeft / 3600000)).padStart(2, '0');
+                const minutesLeft = String(Math.floor((timeLeft % 3600000) / 60000)).padStart(2, '0');
+                const secondsLeft = String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, '0');
+                const millisecondsLeft = String(timeLeft % 1000).padStart(3, '0');
+
+                let timeString = `${hoursLeft}:${minutesLeft}:${secondsLeft}`;
+                if (toggleMsCheckbox.checked) {
+                    timeString += `.${millisecondsLeft}`;
+                }
+                timerDisplay.textContent = `Time left: ${timeString}`;
+            }, 10);
+        }
+
+        function renderWheel() {
+            wheelElement.innerHTML = '';
+            const segmentAngle = 360 / names.length;
+            names.forEach((name, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'wheel-segment';
+                segment.style.transform = `rotate(${index * segmentAngle}deg)`;
+                segment.style.background = `conic-gradient(#${Math.floor(Math.random()*16777215).toString(16)} ${index * segmentAngle}deg, #${Math.floor(Math.random()*16777215).toString(16)} ${(index + 1) * segmentAngle}deg)`;
+                segment.innerHTML = `<span style="transform: rotate(${segmentAngle / 2}deg);">${name}</span>`;
+                wheelElement.appendChild(segment);
+            });
+        }
+
+        function spinWheel() {
+            if (names.length === 0) return;
+
+            const wheelDuration = 8000;
+            const spins = 10;
+            const segmentAngle = 360 / names.length;
+            const chosenIndex = Math.floor(Math.random() * names.length);
+            const finalAngle = 360 * spins + segmentAngle * chosenIndex + segmentAngle / 2;
+
+            wheelElement.style.transition = `transform ${wheelDuration}ms ease-out`;
+            wheelElement.style.transform = `rotate(${finalAngle}deg)`;
+
+            setTimeout(() => {
+                winnerName.textContent = `Winner: ${names[chosenIndex]}`;
+                winnerPopup.style.display = 'block';
+            }, wheelDuration);
+        }
+
+        function generateTeams() {
+            const teamSize = parseInt(teamSizeInput.value) || 1;
+            const shuffledNames = teamNames.sort(() => 0.5 - Math.random());
+            const teams = [];
+            for (let i = 0; i < shuffledNames.length; i += teamSize) {
+                teams.push(shuffledNames.slice(i, i + teamSize));
+            }
+            teamsDisplay.innerHTML = '';
+            teams.forEach((team, index) => {
+                const teamElement = document.createElement('div');
+                teamElement.className = 'team';
+                teamElement.innerHTML = `<span>Team ${index + 1}</span>${team.map(name => `<div>${name}<button onclick="removeTeamName('${name}')">Remove</button></div>`).join('')}`;
+                teamsDisplay.appendChild(teamElement);
+            });
+        }
+
+        function removeTeamName(name) {
+            const index = teamNames.indexOf(name);
+            if (index > -1) {
+                teamNames.splice(index, 1);
+            }
+            generateTeams();
+        }
+
+        modeSelector.addEventListener('change', () => {
+            const mode = modeSelector.value;
+            timerContainer.style.display = mode === 'timer' ? 'flex' : 'none';
+            wheelContainer.style.display = mode === 'wheel' ? 'flex' : 'none';
+            teamMakerContainer.style.display = mode === 'team' ? 'flex' : 'none';
+            timerDisplay.style.display = mode === 'timer' ? 'block' : 'none';
+            wheelDisplay.style.display = mode === 'wheel' ? 'block' : 'none';
+            teamsDisplay.style.display = mode === 'team' ? 'block' : 'none';
+            clockElement.style.display = mode === 'clock' ? 'block' : 'none';
+            dateElement.style.display = mode === 'clock' ? 'block' : 'none';
+            document.getElementById('toggle-ms').parentElement.style.display = mode === 'clock' || mode === 'timer' ? 'flex' : 'none';
+        });
+
+        timerTypeSelector.addEventListener('change', () => {
+            const type = timerTypeSelector.value;
+            endTimeContainer.style.display = type === 'end-time' ? 'flex' : 'none';
+            durationContainer.style.display = type === 'duration' ? 'flex' : 'none';
+        });
+
+        startTimerButton.addEventListener('click', startTimer);
+
+        nameInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('add-name').click();
+            }
+        });
+
+        document.getElementById('add-name').addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (name) {
+                names.push(name);
+                const nameElement = document.createElement('div');
+                nameElement.innerHTML = `${name} <button onclick="removeName('${name}')">Delete</button>`;
+                nameList.appendChild(nameElement);
+                nameInput.value = '';
+                renderWheel();
+            }
+        });
+
+        document.getElementById('add-team-name').addEventListener('click', () => {
+            const name = teamNameInput.value.trim();
+            if (name) {
+                teamNames.push(name);
+                const nameElement = document.createElement('div');
+                nameElement.innerHTML = `${name} <button onclick="removeTeamName('${name}')">Delete</button>`;
+                teamList.appendChild(nameElement);
+                teamNameInput.value = '';
+            }
+        });
+
+        document.getElementById('generate-teams').addEventListener('click', generateTeams);
+
+        colorPicker.addEventListener('input', () => {
+            const color = colorPicker.value;
+            clockElement.style.color = color;
+            dateElement.style.color = color;
+            timerDisplay.style.color = color;
+            winnerPopup.style.color = color;
+            document.querySelectorAll('.wheel-segment span').forEach(el => el.style.color = color);
+        });
+
+        fontSelector.addEventListener('change', () => {
+            const font = fontSelector.value;
+            clockElement.style.fontFamily = font;
+            dateElement.style.fontFamily = font;
+            timerDisplay.style.fontFamily = font;
+            winnerPopup.style.fontFamily = font;
+            document.querySelectorAll('.wheel-segment span').forEach(el => el.style.fontFamily = font);
+        });
+
+        backgroundSelector.addEventListener('change', () => {
+            const background = backgroundSelector.value;
+            topElement.style.backgroundImage = `url('/${background}')`;
+        });
+
+        doneButton.addEventListener('click', () => {
+            winnerPopup.style.display = 'none';
+        });
+
+        removeButton.addEventListener('click', () => {
+            const winner = winnerName.textContent.split(': ')[1];
+            const index = names.indexOf(winner);
+            if (index > -1) {
+                names.splice(index, 1);
+            }
+            winnerPopup.style.display = 'none';
+            renderWheel();
+        });
+
+        function removeName(name) {
+            const index = names.indexOf(name);
+            if (index > -1) {
+                names.splice(index, 1);
+                const nameElement = Array.from(nameList.children).find(el => el.textContent.includes(name));
+                nameList.removeChild(nameElement);
+                renderWheel();
+            }
+        }
+
+        wheelElement.addEventListener('click', spinWheel);
+
+        setInterval(updateTime, 10);
+        updateTime();
+    </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0;
+            height: 200vh; /* Double the viewport height to allow scrolling */
+        }
+        #top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+            background-image: url('/gikis.gif');
+            background-size: 100% 100%; 
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        #clock, #date, #timer-display, #wheel-display, #teams-display {
+            font-size: 8em;
+            margin: 20px;
+        }
+        #date {
+            font-size: 6em; /* Bigger font for the date */
+            margin: 20px;
+        }
+        #bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+            background-color: #e0e0e0;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .option {
+            margin: 15px;
+            padding: 10px;
+            width: 80%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.2em;
+        }
+        .option input[type="checkbox"],
+        .option input[type="color"],
+        .option select,
+        .option input[type="number"] {
+            margin-left: 10px;
+            font-size: 1em;
+        }
+        .option label {
+            display: flex;
+            align-items: center;
+        }
+        #wheel-container, #timer-container, #team-maker-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #name-list, #team-list {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #teams-display > div {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+        }
+        #wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 5px solid #ccc;
+            position: relative;
+            margin: 20px;
+        }
+        #wheel-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        #winner-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 20px;
+            border: 2px solid #cccccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="top">
+        <div id="clock">00:00:00.000 AM</div>
+        <div id="date">Monday, 01 January 2000</div>
+        <div id="timer-display" class="option">Time left: 00:00:00.000</div>
+        <div id="wheel-display">
+            <div id="wheel"></div>
+        </div>
+        <div id="teams-display" class="option">Teams: </div>
+    </div>
+    <div id="bottom">
+        <div class="option">
+            <label>
+                <span>Clock and Date Color:</span>
+                <input type="color" id="color-picker" value="#000000">
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Font:</span>
+                <select id="font-selector">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Courier">Courier</option>
+                </select>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Background Image:</span>
+                <select id="background-selector">
+                    <option value="gikis.gif">Gikis</option>
+                    <option value="fall1.gif">Amazing</option>
+                    <option value="fall2.gif">Amazinger</option>
+                </select>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Mode:</span>
+                <select id="mode-selector">
+                    <option value="clock">Clock with Date and Time</option>
+                    <option value="timer">Timer</option>
+                    <option value="wheel">Wheel of Names</option>
+                    <option value="team">Random Team Maker</option>
+                </select>
+            </label>
+        </div>
+
+        <!-- Timer Options -->
+        <div id="timer-container">
+            <div class="option">
+                <label>
+                    <span>Timer Type:</span>
+                    <select id="timer-type">
+                        <option value="end-time">End Time</option>
+                        <option value="duration">Duration</option>
+                    </select>
+                </label>
+            </div>
+            <div class="option" id="end-time-container">
+                <label>
+                    <span>End Time (Date, Time):</span>
+                    <input type="datetime-local" id="end-time">
+                </label>
+            </div>
+            <div class="option" id="duration-container">
+                <label>
+                    <span>Duration (H:M:S):</span>
+                    <input type="number" id="hours" placeholder="Hours" min="0">
+                    <input type="number" id="minutes" placeholder="Minutes" min="0" max="59">
+                    <input type="number" id="seconds" placeholder="Seconds" min="0" max="59">
+                </label>
+            </div>
+            <div class="option">
+                <label>
+                    <span>Show Milliseconds</span>
+                    <input type="checkbox" id="toggle-ms" checked>
+                </label>
+            </div>
+            <button id="start-timer">Start Timer</button>
+        </div>
+
+        <!-- Wheel of Names Options -->
+        <div id="wheel-container">
+            <div class="option">
+                <label>
+                    <span>Add Name:</span>
+                    <input type="text" id="name-input" placeholder="Enter name">
+                    <button id="add-name">Add</button>
+                </label>
+            </div>
+            <div id="name-list"></div>
+        </div>
+
+        <!-- Random Team Maker Options -->
+        <div id="team-maker-container">
+            <div class="option">
+                <label>
+                    <span>Add Name:</span>
+                    <input type="text" id="team-name-input" placeholder="Enter name">
+                    <button id="add-team-name">Add</button>
+                </label>
+            </div>
+            <div id="team-list"></div>
+            <div class="option">
+                <label>
+                    <span>Team Size:</span>
+                    <input type="number" id="team-size" placeholder="Enter team size">
+                </label>
+            </div>
+            <button id="generate-teams">Generate Teams</button>
+        </div>
+    </div>
+
+    <div id="winner-popup">
+        <div id="winner-name" style="font-size: 2em;"></div>
+        <button id="done-button">Done</button>
+        <button id="remove-button">Remove</button>
+    </div>
+
+    <script>
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        const toggleMsCheckbox = document.getElementById('toggle-ms');
+        const colorPicker = document.getElementById('color-picker');
+        const fontSelector = document.getElementById('font-selector');
+        const backgroundSelector = document.getElementById('background-selector');
+        const topElement = document.getElementById('top');
+
+        const modeSelector = document.getElementById('mode-selector');
+        const timerContainer = document.getElementById('timer-container');
+        const wheelContainer = document.getElementById('wheel-container');
+        const teamMakerContainer = document.getElementById('team-maker-container');
+        const timerDisplay = document.getElementById('timer-display');
+        const wheelDisplay = document.getElementById('wheel-display');
+        const teamsDisplay = document.getElementById('teams-display');
+
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const hoursStr = String(hours).padStart(2, '0');
+            
+            let timeString = `${hoursStr}:${minutes}:${seconds}`;
+            if (toggleMsCheckbox.checked) {
+                timeString += `.${milliseconds}`;
+            }
+            timeString += ` ${ampm}`;
+            clockElement.textContent = timeString;
+
+            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const day = daysOfWeek[now.getDay()];
+            const date = now.toLocaleDateString();
+            dateElement.textContent = `${day}, ${date}`;
+
+            document.title = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        setInterval(updateTime, 1);
+
+        colorPicker.addEventListener('input', () => {
+            clockElement.style.color = colorPicker.value;
+            dateElement.style.color = colorPicker.value;
+            timerDisplay.style.color = colorPicker.value;
+            document.querySelectorAll('#wheel-display, #teams-display > div').forEach(el => {
+                el.style.color = colorPicker.value;
+            });
+        });
+        fontSelector.addEventListener('change', () => {
+            clockElement.style.fontFamily = fontSelector.value;
+            dateElement.style.fontFamily = fontSelector.value;
+            timerDisplay.style.fontFamily = fontSelector.value;
+            document.querySelectorAll('#wheel-display, #teams-display > div').forEach(el => {
+                el.style.fontFamily = fontSelector.value;
+            });
+        });
+        backgroundSelector.addEventListener('change', () => {
+            topElement.style.backgroundImage = `url('/${backgroundSelector.value}')`;
+        });
+
+        updateTime();
+
+        // Mode Change
+        modeSelector.addEventListener('change', () => {
+            const mode = modeSelector.value;
+            timerContainer.style.display = mode === 'timer' ? 'flex' : 'none';
+            wheelContainer.style.display = mode === 'wheel' ? 'flex' : 'none';
+            teamMakerContainer.style.display = mode === 'team' ? 'flex' : 'none';
+            toggleMsCheckbox.style.display = mode === 'timer' ? 'flex' : 'none';
+            timerDisplay.style.display = mode === 'timer' ? 'flex' : 'none';
+            clockElement.style.display = mode === 'clock' ? 'flex' : 'none';
+            dateElement.style.display = mode === 'clock' ? 'flex' : 'none';
+            wheelDisplay.style.display = mode === 'wheel' ? 'flex' : 'none';
+            teamsDisplay.style.display = mode === 'team' ? 'flex' : 'none';
+        });
+
+        // Timer Logic
+        const timerTypeSelector = document.getElementById('timer-type');
+        const endTimeInput = document.getElementById('end-time');
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        let timerInterval;
+
+        timerTypeSelector.addEventListener('change', () => {
+            const type = timerTypeSelector.value;
+            document.getElementById('end-time-container').style.display = type === 'end-time' ? 'flex' : 'none';
+            document.getElementById('duration-container').style.display = type === 'duration' ? 'flex' : 'none';
+        });
+
+        document.getElementById('start-timer').addEventListener('click', () => {
+            clearInterval(timerInterval);
+            let endTime;
+            if (timerTypeSelector.value === 'end-time' && endTimeInput.value) {
+                endTime = new Date(endTimeInput.value).getTime();
+            } else {
+                const now = new Date().getTime();
+                const hours = parseInt(hoursInput.value) || 0;
+                const minutes = parseInt(minutesInput.value) || 0;
+                const seconds = parseInt(secondsInput.value) || 0;
+                endTime = now + (hours * 3600 + minutes * 60 + seconds) * 1000;
+            }
+            timerInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endTime - now;
+                const hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                const minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                const seconds = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+                const milliseconds = String(Math.floor((distance % 1000))).padStart(3, '0');
+                let timeLeft = `Time left: ${hours}:${minutes}:${seconds}`;
+                if (toggleMsCheckbox.checked) {
+                    timeLeft += `.${milliseconds}`;
+                }
+                timerDisplay.textContent = timeLeft;
+                if (distance < 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = 'Time left: 00:00:00.000';
+                }
+            }, 10);
+        });
+
+        // Wheel of Names Logic
+        const nameInput = document.getElementById('name-input');
+        const nameList = document.getElementById('name-list');
+        const wheelResult = document.getElementById('wheel-result');
+        const names = [];
+        document.getElementById('add-name').addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (name) {
+                names.push(name);
+                const nameElement = document.createElement('div');
+                nameElement.textContent = name;
+                nameList.appendChild(nameElement);
+                nameInput.value = '';
+                drawWheel();
+            }
+        });
+        
+        document.getElementById('wheel').addEventListener('click', spinWheel);
+
+        function drawWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = ''; // Clear the wheel
+            const segmentAngle = 360 / names.length;
+            names.forEach((name, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'wheel-segment';
+                segment.style.background = `hsl(${(segmentAngle * index)}, 100%, 50%)`;
+                segment.style.transform = `rotate(${segmentAngle * index}deg)`;
+                segment.style.clipPath = `polygon(50% 50%, ${Math.cos((segmentAngle * index - segmentAngle / 2) * Math.PI / 180) * 100 + 50}% ${Math.sin((segmentAngle * index - segmentAngle / 2) * Math.PI / 180) * 100 + 50}%, ${Math.cos((segmentAngle * (index + 1) - segmentAngle / 2) * Math.PI / 180) * 100 + 50}% ${Math.sin((segmentAngle * (index + 1) - segmentAngle / 2) * Math.PI / 180) * 100 + 50}%)`;
+                const nameElement = document.createElement('div');
+                nameElement.textContent = name;
+                nameElement.style.transform = `rotate(${segmentAngle / 2}deg)`;
+                segment.appendChild(nameElement);
+                wheel.appendChild(segment);
+            });
+        }
+
+        function spinWheel() {
+            const wheel = document.getElementById('wheel');
+            const randomIndex = Math.floor(Math.random() * names.length);
+            const degrees = 360 * 4 + randomIndex * (360 / names.length);
+            wheel.style.transition = 'transform 8s ease';
+            wheel.style.transform = `rotate(${degrees}deg)`;
+            setTimeout(() => {
+                const selectedName = names[randomIndex];
+                document.getElementById('winner-name').textContent = selectedName;
+                document.getElementById('winner-popup').style.display = 'block';
+            }, 8000);
+        }
+
+        document.getElementById('done-button').addEventListener('click', () => {
+            document.getElementById('winner-popup').style.display = 'none';
+        });
+
+        document.getElementById('remove-button').addEventListener('click', () => {
+            const winnerName = document.getElementById('winner-name').textContent;
+            const index = names.indexOf(winnerName);
+            if (index > -1) {
+                names.splice(index, 1);
+                nameList.removeChild(nameList.childNodes[index]);
+            }
+            document.getElementById('winner-popup').style.display = 'none';
+            drawWheel();
+        });
+
+        // Random Team Maker Logic
+        const teamNameInput = document.getElementById('team-name-input');
+        const teamList = document.getElementById('team-list');
+        const teamSizeInput = document.getElementById('team-size');
+        const teamNames = [];
+        document.getElementById('add-team-name').addEventListener('click', () => {
+            const name = teamNameInput.value.trim();
+            if (name) {
+                teamNames.push(name);
+                const nameElement = document.createElement('div');
+                nameElement.textContent = name;
+                teamList.appendChild(nameElement);
+                teamNameInput.value = '';
+            }
+        });
+
+        document.getElementById('generate-teams').addEventListener('click', () => {
+            const teamSize = parseInt(teamSizeInput.value) || 1;
+            const shuffledNames = teamNames.sort(() => 0.5 - Math.random());
+            const teams = [];
+            for (let i = 0; i < shuffledNames.length; i += teamSize) {
+                teams.push(shuffledNames.slice(i, i + teamSize));
+            }
+            teamsDisplay.innerHTML = '';
+            teams.forEach((team, index) => {
+                const teamElement = document.createElement('div');
+                teamElement.textContent = `Team ${index + 1}: ${team.join(', ')}`;
+                teamsDisplay.appendChild(teamElement);
+            });
+        });
+
+        // Initial Setup
+        modeSelector.dispatchEvent(new Event('change'));
+        timerTypeSelector.dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>
