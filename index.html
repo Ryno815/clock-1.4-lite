@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GikisClock</title>
+    <link rel="icon" href="/gikis_icon_3_bg.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0;
+            height: 200vh; /* Double the viewport height to allow scrolling */
+        }
+        #top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        #top video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill; /* Ensure the video fits within the container without being cut off */
+            z-index: -1; /* Ensure the video is behind other content */
+        }
+        #clock {
+            font-size: 8em;
+            margin: 20px;
+            z-index: 1; /* Ensure the clock is above the video */
+        }
+        #date {
+            font-size: 6em; /* Bigger font for the date */
+            margin: 20px;
+            z-index: 1; /* Ensure the date is above the video */
+        }
+        #bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            width: 100%;
+            background-color: #e0e0e0;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .option {
+            margin: 15px;
+            padding: 10px;
+            width: 80%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.2em;
+        }
+        .option input[type="checkbox"],
+        .option input[type="color"],
+        .option select {
+            margin-left: 10px;
+            font-size: 1em;
+        }
+        .option label {
+            display: flex;
+            align-items: center;
+        }
+
+
+        /* Popup */
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: hidden; /* Initially hidden */
+        }
+
+        #modal.show {
+            visibility: visible; /* Make modal visible when triggered */
+        }
+
+        #modalContent {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 80%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #modalContent p {
+            margin: 20px 0;
+        }
+
+        #modalContent a {
+            color: blue;
+            text-decoration: underline;
+        }
+
+        #modalContent button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        #modalContent .close-button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="top">
+        <video id="background-video" loop muted autoplay>
+            <source src="gikis.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div id="clock">00:00:00.000 AM</div>
+        <div id="date">Monday, 01 January 2000</div>
+    </div>
+    <div id="bottom">
+        <div class="option">
+            <label>
+                <span>Toggle Milliseconds</span>
+                <input type="checkbox" id="toggle-ms" checked>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Toggle 24-Hour Clock</span>
+                <input type="checkbox" id="toggle-24hr">
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Clock and Date Color:</span>
+                <input type="color" id="color-picker" value="#000000">
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Font:</span>
+                <select id="font-selector">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Courier">Courier</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                </select>
+            </label>
+        </div>
+        <div class="option">
+            <label>
+                <span>Background Video:</span>
+                <select id="background-selector">
+                    <option value="gikis.mp4">Gikis</option>
+                    <option value="Antonio1.mp4">Antonio</option>
+                    <option value="Cam1.mp4">Cam</option>
+                    <option value="Corwin1.mp4">Corwin</option>
+                    <option value="Liam1.mp4">Liam</option>
+                    <option value="Lukas1.mp4">Lukas</option>
+                    <option value="Martin1.mp4">Martin</option>
+                    <option value="Paul1.mp4">Paul</option>
+                    <option value="Rene1.mp4">Rene</option>
+                    <option value="Vraj1.mp4">Vraj</option>
+                    <option value="Will1.mp4">Will</option>
+                    <option value="Xavier1.mp4">Xavier</option>
+                </select>
+            </label>
+        </div>
+        <!-- Modal Popup -->
+        <div id="modal">
+          <div id="modalContent">
+              <h2>GikisClock has been moved</h2>
+              <p>See the new site <a href="http://www.gikisclock.com/" target="_blank">here</a>.</p>
+              <button id="closeModal" class="close-button">Stay on Netlify</button>
+          </div>
+        </div>
+    </div>
+    <script>
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        const toggleMsCheckbox = document.getElementById('toggle-ms');
+        const toggle24hrCheckbox = document.getElementById('toggle-24hr');
+        const colorPicker = document.getElementById('color-picker');
+        const fontSelector = document.getElementById('font-selector');
+        const backgroundSelector = document.getElementById('background-selector');
+        const backgroundVideo = document.getElementById('background-video');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            let timeString;
+
+            if (toggle24hrCheckbox.checked) {
+                timeString = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+                if (toggleMsCheckbox.checked) {
+                    timeString += `.${milliseconds}`;
+                }
+            } else {
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+                const hoursStr = String(hours).padStart(2, '0');
+                timeString = `${hoursStr}:${minutes}:${seconds}`;
+                if (toggleMsCheckbox.checked) {
+                    timeString += `.${milliseconds}`;
+                }
+                timeString += ` ${ampm}`;
+            }
+
+            clockElement.textContent = timeString;
+
+            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const day = daysOfWeek[now.getDay()];
+            const date = now.toLocaleDateString();
+            dateElement.textContent = `${day}, ${date}`;
+
+            document.title = toggle24hrCheckbox.checked ? `${String(hours).padStart(2, '0')}:${minutes}:${seconds}` : `${String(hours % 12 || 12).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        setInterval(updateTime, 1);
+
+        toggleMsCheckbox.addEventListener('change', updateTime);
+        toggle24hrCheckbox.addEventListener('change', updateTime);
+        colorPicker.addEventListener('input', () => {
+            clockElement.style.color = colorPicker.value;
+            dateElement.style.color = colorPicker.value;
+        });
+        fontSelector.addEventListener('change', () => {
+            clockElement.style.fontFamily = fontSelector.value;
+            dateElement.style.fontFamily = fontSelector.value;
+        });
+        backgroundSelector.addEventListener('change', () => {
+            const videoSource = `/${backgroundSelector.value}`;
+            backgroundVideo.setAttribute('src', videoSource);
+            backgroundVideo.load();
+            backgroundVideo.play();
+        });
+
+        window.onload = function() {
+            modal.classList.add('show');
+        };
+        closeModal.addEventListener('click', function() {
+            modal.classList.remove('show');
+        });
+
+        updateTime();
+    </script>
+</body>
+</html>
